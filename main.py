@@ -15,6 +15,123 @@ class ExamBuilder(webdriver.Chrome):
         self.password = password
         super().__init__(service=Service(ChromeDriverManager().install()))
 
+    def createHTML(self):
+        HTML = f''' 
+            <!DOCTYPE html>
+                <html lang="en">
+                
+                <head>
+                    <base href="{self.courseName}/">
+                    <meta charset="UTF-8">
+                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Homepage</title>
+                    <link rel="stylesheet" href="asset/css/style.css">
+                </head>
+                
+                <body>
+                    <div class="homepage-tab">
+                        <div class="inner">
+                            <button class="courses">
+                                <span class="header">
+                                    Courses
+                                </span>
+                            </button>
+                            <button class="exam">
+                                <span class="header">
+                                    Exam Builder
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                  
+                    <div class="exam-tab">
+                        <div class="wrapper">
+                            <div class="body">
+                                <div id="examBuilder" class="container">
+                                    <div class="row">
+                                        <div class="header">
+                                            <label for="header-checkbox">
+                                                <span class="header-text">
+                                                    Courses
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="content" id="courses">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="header">
+                                            <label for="header-checkbox">
+                                                <span class="header-text">
+                                                    Question Mode
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="content">
+                                            <div class="col">
+                                                <label for="question-mode-0">
+                                                    <input type="radio" class="content-radio" id="question-mode-0"
+                                                        name="question-mode" data="EXAM">
+                                                    <span class="content-text">
+                                                        Exam
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="col">
+                                                <label for="question-mode-1">
+                                                    <input type="radio" class="content-radio" id="question-mode-1"
+                                                        name="question-mode" data="FLASHCARD">
+                                                    <span class="content-text">
+                                                        Flashcard
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="header">
+                                            <label for="header-checkbox-0">
+                                                <span class="header-text">
+                                                    Lectures
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="content" id="lecture">
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="header">
+                                            <label for="header-checkbox">
+                                                <span class="header-text">
+                                                    No. of Questions
+                                                </span>
+                                                <span class="available-question">0</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="footer">
+                                <button class="create-test">
+                                    GENERATE TEST
+                                </button>
+                            </div>
+                            <iframe id="testModule" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                    <script src="asset/js/app.js"></script>
+                    <script>
+                        window.onload = () => {{document.querySelector(".exam").click();}};
+                    </script>
+                </body>
+                
+                </html>
+        '''
+        with open(f"{self.courseName}/Exam Builder.html", 'w', encoding='UTF-8') as file:
+            file.write(HTML)
+
     def createDirs(self) -> None:
         if os.path.exists(self.courseName):
             shutil.rmtree(self.courseName)
@@ -31,7 +148,8 @@ class ExamBuilder(webdriver.Chrome):
             os.mkdir(f"{self.courseName}/{dir}")
 
     def getCourseName(self) -> str:
-        return self.find_element(By.XPATH, '//*[@id="j_id0:j_id4:j_id35"]/header/div/div[1]/h3').text
+        courseName = WebDriverWait(self, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="j_id0:j_id4:j_id35"]/header/div/div[1]/h3')))
+        return courseName.text
 
     def setCourseName(self, courseName) -> None:
         self.courseName = f"{courseName} QBank"
@@ -40,15 +158,18 @@ class ExamBuilder(webdriver.Chrome):
         self.get("https://apicommunity.force.com/api/API_Login")
 
     def login(self) -> None:
-        self.find_element(By.NAME, "j_id0:theForm:j_id2:username").send_keys(self.email)
+        username = WebDriverWait(self,30).until(EC.presence_of_element_located((By.NAME, "j_id0:theForm:j_id2:username")))
+        username.send_keys(self.email)
         self.find_element(By.NAME, "j_id0:theForm:j_id2:password").send_keys(self.password)
         self.find_element(By.ID, "j_id0:theForm:j_id2:LogInButton").click()
 
     def openAvailableCourse(self) -> None:
-        self.find_element(By.XPATH, '//*[@id="j_id0:j_id4:j_id53:j_id65:0:j_id101"]').click()
+        course =  WebDriverWait(self,30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="j_id0:j_id4:j_id53:j_id65:0:j_id101"]')))
+        course.click()
 
     def clickOnExamTab(self) -> None:
-        self.find_element(By.XPATH, '//*[@id="tabbed-navigation"]/ul/li[3]/a').click()
+        examTab = WebDriverWait(self,30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="tabbed-navigation"]/ul/li[3]/a')))
+        examTab.click()
         self.setLink()
 
     def removeInProgress(self) -> bool:
@@ -111,22 +232,24 @@ class ExamBuilder(webdriver.Chrome):
         for i in range(length):
             question = {
                 "question": self.find_element(By.CLASS_NAME, "question-text").get_attribute("outerHTML"),
-                "options": [],
+                "options": "",
                 "correctAnswer": "",
                 "exp": ""
             }
 
             for tr in self.find_element(By.CSS_SELECTOR, "table[role='presentation']").find_elements(By.TAG_NAME, 'tr'):
-                question["options"].append(
-                    f'<li>{tr.find_element(By.TAG_NAME, "label").text}/n</li>'
-                )
+
+                question["options"] += f'<li>{tr.find_element(By.TAG_NAME, "label").text}</li>'
 
             self.find_element(By.CSS_SELECTOR, "input[type='radio']").click()
 
             self.find_element(By.CSS_SELECTOR, 'input[value="Continue"]').click()
-
-            explainationSpan = WebDriverWait(self,15).until( EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/span[2]/form/article/span[2]/span/section/div/div/span[1]")))
-
+            explainationSpan = None
+            try:
+                explainationSpan = WebDriverWait(self,15).until( EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/span[2]/form/article/span[2]/span/section/div/div/span[1]")))
+            except:
+                print("DEVELOPER ATTENTION!!!")
+                time.sleep(40000)
             question["correctAnswer"] = explainationSpan.find_element(By.XPATH, './p[2]').text[0]
             question["exp"] = explainationSpan.get_attribute("outerHTML")
 
@@ -165,6 +288,7 @@ class ExamBuilder(webdriver.Chrome):
             file.write(f"data = {array}")
 
     def prepareAllExams(self) -> None:
+        self.createHTML()
         for topic in self.topics:
             name = topic["name"]
             length = topic["length"]
@@ -185,19 +309,16 @@ class ExamBuilder(webdriver.Chrome):
 
             self.createTopicQuestionsJsonp(name, allTopicQuestions)
 
+
 def main():
     email = input("Please input your email")
     password = input("Please input the password")
 
     with ExamBuilder(email, password) as exam:
         exam.openWebsite()
-        time.sleep(2)
         exam.login()
-        time.sleep(2)
         exam.openAvailableCourse()
-        time.sleep(2)
         exam.clickOnExamTab()
-        time.sleep(3)
 
         exam.setCourseName(exam.getCourseName())
         while exam.removeInProgress():
